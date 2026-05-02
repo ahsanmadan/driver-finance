@@ -690,10 +690,11 @@ export default function TransactionsPage() {
                 Belum ada aset. Tambahkan sekarang!
               </div>
             ) : (
-              livePortfolio.map((asset) => {
-                const pnlIsPositive = asset.pnlAmount >= 0;
-                return (
-                  <Card key={asset.id} className="bg-card/30 border-slate-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {livePortfolio.map((asset) => {
+                  const pnlIsPositive = asset.pnlAmount >= 0;
+                  return (
+                    <Card key={asset.id} className="bg-card/30 border-slate-800 flex flex-col justify-between">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div>
                         <p className="font-bold text-lg leading-tight flex items-center">
@@ -720,16 +721,18 @@ export default function TransactionsPage() {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })
+                    </Card>
+                  );
+                })}
+              </div>
             )}
           </div>
 
           <Separator className="opacity-30" />
 
-          {/* Existing Form */}
-          <Card className="bg-card/20 border-slate-800 shadow-none">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Existing Form */}
+            <Card className="bg-card/20 border-slate-800 shadow-none">
             <CardHeader className="py-4">
               <CardTitle className="text-base text-slate-300">Setor Dana Cash</CardTitle>
               <CardDescription className="text-xs">
@@ -875,6 +878,7 @@ export default function TransactionsPage() {
               </form>
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

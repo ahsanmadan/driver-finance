@@ -45,7 +45,7 @@ export default async function DashboardPage() {
           <AddWalletDialog />
         </div>
         {wallets.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {wallets.map((wallet) => (
               <WalletCard key={wallet.id} wallet={wallet} />
             ))}

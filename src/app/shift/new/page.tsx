@@ -98,8 +98,9 @@ export default function InputShiftPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="bg-card/50">
-          <CardContent className="p-4 space-y-4">
-            <div className="space-y-2">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div className="space-y-2">
               <Label htmlFor="date">Tanggal</Label>
               <Input
                 id="date"
@@ -124,7 +125,7 @@ export default function InputShiftPage() {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="grossIncome" className="text-zinc-300 font-medium">Pendapatan Aplikasi</Label>
               <Input
                 id="grossIncome"
@@ -139,7 +140,7 @@ export default function InputShiftPage() {
               )}
             </div>
 
-            <Separator className="opacity-50" />
+            <Separator className="opacity-50 md:col-span-2" />
 
             <div className="space-y-2">
               <Label htmlFor="fuelExpense" className="text-zinc-300">Pengeluaran Bensin</Label>
@@ -201,9 +202,9 @@ export default function InputShiftPage() {
               )}
             </div>
 
-            <Separator className="opacity-50" />
+            <Separator className="opacity-50 md:col-span-2" />
 
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="notes" className="text-zinc-300">Catatan Tambahan (Opsional)</Label>
               <Textarea
                 id="notes"
@@ -213,23 +214,24 @@ export default function InputShiftPage() {
                 className="resize-none h-20"
               />
             </div>
+            
+            <div className="bg-primary text-primary-foreground border-none rounded-xl p-4 flex items-center justify-between md:col-span-2">
+              <span className="font-medium text-primary-foreground/80">Pendapatan Bersih</span>
+              <span className="text-2xl font-bold">{formatRupiah(netIncome)}</span>
+            </div>
+
+            <div className="md:col-span-2">
+              <Button
+                type="submit"
+                className="w-full font-bold text-base h-12"
+                disabled={isPending}
+              >
+                {isPending ? "Menyimpan..." : "Simpan Shift"}
+              </Button>
+            </div>
+            </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-primary text-primary-foreground border-none">
-          <CardContent className="p-4 flex items-center justify-between">
-            <span className="font-medium text-primary-foreground/80">Pendapatan Bersih</span>
-            <span className="text-2xl font-bold">{formatRupiah(netIncome)}</span>
-          </CardContent>
-        </Card>
-
-        <Button
-          type="submit"
-          className="w-full font-bold text-base h-12"
-          disabled={isPending}
-        >
-          {isPending ? "Menyimpan..." : "Simpan Shift"}
-        </Button>
       </form>
     </div>
   );

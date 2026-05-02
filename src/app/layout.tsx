@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
+import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
 const fontSans = Poppins({ 
@@ -37,11 +38,14 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark">
       <body
-        className={`${fontSans.variable} antialiased min-h-screen pb-32`}
+        className={`${fontSans.variable} antialiased min-h-screen bg-background`}
       >
-        <main className="max-w-md mx-auto p-4 min-h-screen pb-safe">
-          {children}
-        </main>
+        <div className="md:flex md:min-h-screen">
+          <Sidebar />
+          <main className="flex-1 max-w-md md:max-w-5xl mx-auto p-4 pb-32 md:pb-8 md:px-8 w-full">
+            {children}
+          </main>
+        </div>
         <BottomNav />
         <Toaster theme="dark" position="top-center" />
       </body>
