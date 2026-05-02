@@ -15,6 +15,7 @@ export interface Shift {
   food_expense: number;
   parking_expense: number;
   maintenance_expense: number;
+  notes?: string;
   net_income: number;
 }
 

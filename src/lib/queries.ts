@@ -92,6 +92,7 @@ export async function createShift(data: Omit<Shift, "id" | "net_income">): Promi
         food_expense: data.food_expense,
         parking_expense: data.parking_expense,
         maintenance_expense: data.maintenance_expense,
+        notes: data.notes,
       },
     ])
     .select()
@@ -140,7 +141,7 @@ export async function createCODTransaction(amount: number): Promise<void> {
   if (tError) console.error("Warning: Gagal mencatat log transaksi COD", tError);
 }
 
-export async function createTransfer(fromId: string, toId: string, amount: number): Promise<void> {
+export async function createTransfer(fromId: string, toId: string, amount: number, customDescription?: string): Promise<void> {
   const supabase = await createClient();
 
   // 1. Get wallets
@@ -171,9 +172,12 @@ export async function createTransfer(fromId: string, toId: string, amount: numbe
   if (e2) throw new Error(`Gagal menambah saldo ${toWallet.name}.`);
 
   // 3. Record transactions
+  const outDesc = customDescription ? customDescription : `Transfer ke ${toWallet.name}`;
+  const inDesc = customDescription ? customDescription : `Transfer dari ${fromWallet.name}`;
+
   const { error: tError } = await supabase.from("transactions").insert([
-    { wallet_id: fromWallet.id, type: "transfer", amount: -amount, description: `Transfer ke ${toWallet.name}` },
-    { wallet_id: toWallet.id, type: "transfer", amount: amount, description: `Transfer dari ${fromWallet.name}` },
+    { wallet_id: fromWallet.id, type: "transfer", amount: -amount, description: outDesc },
+    { wallet_id: toWallet.id, type: "transfer", amount: amount, description: inDesc },
   ]);
 
   if (tError) console.error("Warning: Gagal mencatat log transfer", tError);
@@ -261,6 +265,7 @@ export async function updateShift(id: string, data: Omit<Shift, "id" | "net_inco
       food_expense: data.food_expense,
       parking_expense: data.parking_expense,
       maintenance_expense: data.maintenance_expense,
+      notes: data.notes,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);

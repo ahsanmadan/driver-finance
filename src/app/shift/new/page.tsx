@@ -8,6 +8,7 @@ import { formatRupiah, getTodayISO, parseIntSafe } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +24,7 @@ export default function InputShiftPage() {
   const [foodExpenseStr, setFoodExpenseStr] = useState("");
   const [parkingExpenseStr, setParkingExpenseStr] = useState("");
   const [maintenanceExpenseStr, setMaintenanceExpenseStr] = useState("");
+  const [notes, setNotes] = useState("");
 
   const grossIncome = parseIntSafe(grossIncomeStr);
   const fuelExpense = parseIntSafe(fuelExpenseStr);
@@ -74,6 +76,7 @@ export default function InputShiftPage() {
           food_expense: foodExpense,
           parking_expense: parkingExpense,
           maintenance_expense: maintenanceExpense,
+          notes: notes.trim() !== "" ? notes.trim() : undefined,
         });
         
         toast.success("Shift berhasil disimpan!");
@@ -202,6 +205,19 @@ export default function InputShiftPage() {
               {maintenanceExpenseStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(maintenanceExpense)}</p>
               )}
+            </div>
+
+            <Separator className="opacity-50" />
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Catatan Tambahan (Opsional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Contoh: Makan Mie Gacoan, Ganti Oli..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="bg-background resize-none h-20"
+              />
             </div>
           </CardContent>
         </Card>

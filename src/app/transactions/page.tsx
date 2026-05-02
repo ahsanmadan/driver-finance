@@ -39,6 +39,12 @@ export default function TransactionsPage() {
   const [sourceWalletId, setSourceWalletId] = useState("");
   const goalAmount = parseIntSafe(goalAmountStr);
 
+  // Investasi State
+  const [investSourceId, setInvestSourceId] = useState("");
+  const [investAmountStr, setInvestAmountStr] = useState("");
+  const [investNote, setInvestNote] = useState("");
+  const investAmount = parseIntSafe(investAmountStr);
+
   useEffect(() => {
     // Load wallets and goals on mount
     getWallets().then(setWallets);
@@ -139,6 +145,45 @@ export default function TransactionsPage() {
     });
   };
 
+  const handleInvestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!investSourceId) {
+      toast.error("Silakan pilih dompet sumber dana.");
+      return;
+    }
+    const investWallet = wallets.find((w) => w.name === "Portofolio Investasi");
+    if (!investWallet) {
+      toast.error("Dompet 'Portofolio Investasi' tidak ditemukan.");
+      return;
+    }
+    if (investSourceId === investWallet.id) {
+      toast.error("Dompet sumber tidak boleh Portofolio Investasi.");
+      return;
+    }
+    if (!investAmountStr || investAmount <= 0) {
+      toast.error("Nominal investasi tidak valid.");
+      return;
+    }
+    if (!investNote.trim()) {
+      toast.error("Catatan aset investasi wajib diisi.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await createTransfer(investSourceId, investWallet.id, investAmount, investNote.trim());
+        toast.success("Catatan portofolio berhasil ditambahkan!");
+        setInvestAmountStr("");
+        setInvestSourceId("");
+        setInvestNote("");
+        getWallets().then(setWallets);
+        router.refresh();
+      } catch (error: any) {
+        toast.error(error.message || "Gagal menyimpan investasi.");
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col space-y-6 pt-4 pb-8">
       <div>
@@ -147,10 +192,11 @@ export default function TransactionsPage() {
       </div>
 
       <Tabs defaultValue="cod" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="cod">Setor COD</TabsTrigger>
-          <TabsTrigger value="transfer">Transfer</TabsTrigger>
-          <TabsTrigger value="tabungan">Tabungan</TabsTrigger>
+        <TabsList className="flex flex-wrap h-auto gap-2 mb-6 bg-transparent">
+          <TabsTrigger value="cod" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">COD</TabsTrigger>
+          <TabsTrigger value="transfer" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Transfer</TabsTrigger>
+          <TabsTrigger value="tabungan" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-purple-600 data-[state=active]:text-white">Tabungan</TabsTrigger>
+          <TabsTrigger value="investasi" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-blue-600 data-[state=active]:text-white">Investasi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cod">
@@ -361,6 +407,81 @@ export default function TransactionsPage() {
                 </Button>
               </form>
 
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="investasi">
+          <Card className="bg-card/50 border-blue-500/20">
+            <CardHeader>
+              <CardTitle className="text-lg">Portofolio Investasi</CardTitle>
+              <CardDescription>
+                Catat pembelian saham, reksa dana, atau kripto Anda.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleInvestSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Dari Wallet</Label>
+                  <Select value={investSourceId} onValueChange={setInvestSourceId}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Pilih sumber dana" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {wallets.filter((w) => w.name !== "Portofolio Investasi").map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.name} ({formatRupiah(w.balance)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex justify-center py-2 text-muted-foreground">
+                  <ArrowDown size={20} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Ke Wallet</Label>
+                  <Input
+                    disabled
+                    value="📈 Portofolio Investasi"
+                    className="bg-background/50 opacity-70"
+                  />
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="investAmount">Nominal Investasi</Label>
+                  <Input
+                    id="investAmount"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="Contoh: 1000000"
+                    value={investAmountStr}
+                    onChange={(e) => setInvestAmountStr(e.target.value)}
+                    className="bg-background"
+                  />
+                  {investAmountStr && (
+                    <p className="text-xs text-muted-foreground ml-1">{formatRupiah(investAmount)}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="investNote">Catatan Aset (Wajib)</Label>
+                  <Input
+                    id="investNote"
+                    type="text"
+                    placeholder="Contoh: Beli 10 lot BBCA"
+                    value={investNote}
+                    onChange={(e) => setInvestNote(e.target.value)}
+                    className="bg-background"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending || investAmount <= 0 || !investNote.trim()}>
+                  {isPending ? "Memproses..." : "Catat Investasi"}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>

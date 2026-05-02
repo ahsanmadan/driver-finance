@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +61,7 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
   const [foodExpenseStr, setFoodExpenseStr] = useState(shift.food_expense.toString());
   const [parkingExpenseStr, setParkingExpenseStr] = useState((shift.parking_expense || 0).toString());
   const [maintenanceExpenseStr, setMaintenanceExpenseStr] = useState((shift.maintenance_expense || 0).toString());
+  const [notes, setNotes] = useState(shift.notes || "");
 
   const grossIncome = parseIntSafe(grossIncomeStr);
   const fuelExpense = parseIntSafe(fuelExpenseStr);
@@ -85,6 +87,7 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
           food_expense: foodExpense,
           parking_expense: parkingExpense,
           maintenance_expense: maintenanceExpense,
+          notes: notes.trim() !== "" ? notes.trim() : undefined,
         });
         toast.success("Data shift berhasil diperbarui.");
         setIsEditDialogOpen(false);
@@ -151,8 +154,13 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
                 Makan: {formatRupiah(shift.food_expense)}
               </Badge>
             </div>
+            {shift.notes && (
+              <p className="text-[10px] text-muted-foreground/80 italic mt-1 pr-2 line-clamp-2">
+                Catatan: {shift.notes}
+              </p>
+            )}
           </div>
-          <div className="text-right pr-6">
+          <div className="text-right pr-6 shrink-0">
             <span className="text-xs text-muted-foreground block mb-0.5">Pendapatan Bersih</span>
             <span className="text-sm font-bold text-primary">{formatRupiah(shift.net_income)}</span>
           </div>
@@ -211,6 +219,15 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
                 <Label className="text-[11px] text-orange-500">Servis</Label>
                 <Input type="number" value={maintenanceExpenseStr} onChange={(e) => setMaintenanceExpenseStr(e.target.value)} required />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[11px]">Catatan</Label>
+              <Textarea 
+                value={notes} 
+                onChange={(e) => setNotes(e.target.value)} 
+                className="resize-none h-16 text-sm" 
+              />
             </div>
 
             <div className="bg-primary/10 p-3 rounded-md flex justify-between items-center mt-2">
