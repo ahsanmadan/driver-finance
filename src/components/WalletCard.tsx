@@ -70,7 +70,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
         toast.success("Dompet berhasil diperbarui.");
         setIsEditDialogOpen(false);
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal memperbarui dompet.");
       }
     });
@@ -83,7 +83,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
         toast.success("Dompet berhasil dihapus.");
         setIsDeleteDialogOpen(false);
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal menghapus dompet.");
       }
     });
@@ -162,7 +162,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus Dompet Ini?</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus dompet "{wallet.name}"?
+              Apakah Anda yakin ingin menghapus dompet &quot;{wallet.name}&quot;?
               Tindakan ini tidak dapat dibatalkan. Penghapusan akan ditolak jika dompet ini memiliki riwayat transaksi.
             </AlertDialogDescription>
           </AlertDialogHeader>

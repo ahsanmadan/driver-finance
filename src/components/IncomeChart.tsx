@@ -54,7 +54,7 @@ export function IncomeChart({ shifts }: IncomeChartProps) {
             tickFormatter={(value) => `Rp${value / 1000}k`}
           />
           <Tooltip 
-            formatter={(value: number) => formatRupiah(value)}
+            formatter={(value: any) => formatRupiah(Number(value))}
             contentStyle={{ 
               backgroundColor: "oklch(0.19 0 0)", 
               borderColor: "oklch(1 0 0 / 10%)",

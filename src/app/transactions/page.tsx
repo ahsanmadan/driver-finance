@@ -69,7 +69,7 @@ export default function TransactionsPage() {
         toast.success("Setor COD berhasil dicatat!");
         setCodAmountStr("");
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal mencatat COD.");
       }
     });
@@ -107,7 +107,7 @@ export default function TransactionsPage() {
         setFromWalletId("");
         setToWalletId("");
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal melakukan transfer.");
       }
     });
@@ -139,7 +139,7 @@ export default function TransactionsPage() {
         getSavingGoals().then(setSavingGoals);
         getWallets().then(setWallets);
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal mengalokasikan dana.");
       }
     });
@@ -178,7 +178,7 @@ export default function TransactionsPage() {
         setInvestNote("");
         getWallets().then(setWallets);
         router.refresh();
-      } catch (error: any) {
+      } catch (error) {
         toast.error(error.message || "Gagal menyimpan investasi.");
       }
     });
