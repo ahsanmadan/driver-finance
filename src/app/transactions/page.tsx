@@ -193,10 +193,10 @@ export default function TransactionsPage() {
 
       <Tabs defaultValue="cod" className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-2 mb-6 bg-transparent">
-          <TabsTrigger value="cod" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">COD</TabsTrigger>
-          <TabsTrigger value="transfer" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Transfer</TabsTrigger>
-          <TabsTrigger value="tabungan" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-purple-600 data-[state=active]:text-white">Tabungan</TabsTrigger>
-          <TabsTrigger value="investasi" className="flex-1 min-w-[80px] bg-card data-[state=active]:bg-blue-600 data-[state=active]:text-white">Investasi</TabsTrigger>
+          <TabsTrigger value="cod" className="flex-1 min-w-[80px] bg-card text-slate-400 data-[state=active]:bg-[#EE4D2D] data-[state=active]:text-white">COD</TabsTrigger>
+          <TabsTrigger value="transfer" className="flex-1 min-w-[80px] bg-card text-slate-400 data-[state=active]:bg-[#EE4D2D] data-[state=active]:text-white">Transfer</TabsTrigger>
+          <TabsTrigger value="tabungan" className="flex-1 min-w-[80px] bg-card text-slate-400 data-[state=active]:bg-purple-600 data-[state=active]:text-white">Tabungan</TabsTrigger>
+          <TabsTrigger value="investasi" className="flex-1 min-w-[80px] bg-card text-slate-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Investasi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cod">
@@ -259,7 +259,7 @@ export default function TransactionsPage() {
                 <div className="space-y-2">
                   <Label>Dari Wallet</Label>
                   <Select value={fromWalletId} onValueChange={setFromWalletId}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Pilih sumber dana" />
                     </SelectTrigger>
                     <SelectContent>
@@ -279,7 +279,7 @@ export default function TransactionsPage() {
                 <div className="space-y-2">
                   <Label>Ke Wallet</Label>
                   <Select value={toWalletId} onValueChange={setToWalletId}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Pilih tujuan dana" />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,7 +301,6 @@ export default function TransactionsPage() {
                     placeholder="Contoh: 100000"
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
-                    className="bg-background"
                   />
                   {transferAmountStr && (
                     <p className="text-xs text-muted-foreground ml-1">{formatRupiah(transferAmount)}</p>
@@ -357,7 +356,7 @@ export default function TransactionsPage() {
                 <div className="space-y-2">
                   <Label>Pilih Target Tabungan</Label>
                   <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Pilih target" />
                     </SelectTrigger>
                     <SelectContent>
@@ -373,7 +372,7 @@ export default function TransactionsPage() {
                 <div className="space-y-2">
                   <Label>Dari Wallet</Label>
                   <Select value={sourceWalletId} onValueChange={setSourceWalletId}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Pilih dompet sumber dana" />
                     </SelectTrigger>
                     <SelectContent>
@@ -395,14 +394,13 @@ export default function TransactionsPage() {
                     placeholder="Contoh: 50000"
                     value={goalAmountStr}
                     onChange={(e) => setGoalAmountStr(e.target.value)}
-                    className="bg-background"
                   />
                   {goalAmountStr && (
                     <p className="text-xs text-muted-foreground ml-1">{formatRupiah(goalAmount)}</p>
                   )}
                 </div>
 
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white" disabled={isPending || goalAmount <= 0}>
+                <Button type="submit" className="w-full bg-[#EE4D2D] hover:bg-[#D74427] text-white" disabled={isPending || goalAmount <= 0}>
                   {isPending ? "Memproses..." : "Alokasikan Dana"}
                 </Button>
               </form>
@@ -424,7 +422,7 @@ export default function TransactionsPage() {
                 <div className="space-y-2">
                   <Label>Dari Wallet</Label>
                   <Select value={investSourceId} onValueChange={setInvestSourceId}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Pilih sumber dana" />
                     </SelectTrigger>
                     <SelectContent>
@@ -446,7 +444,7 @@ export default function TransactionsPage() {
                   <Input
                     disabled
                     value="📈 Portofolio Investasi"
-                    className="bg-background/50 opacity-70"
+                    className="opacity-70"
                   />
                 </div>
 
@@ -459,7 +457,6 @@ export default function TransactionsPage() {
                     placeholder="Contoh: 1000000"
                     value={investAmountStr}
                     onChange={(e) => setInvestAmountStr(e.target.value)}
-                    className="bg-background"
                   />
                   {investAmountStr && (
                     <p className="text-xs text-muted-foreground ml-1">{formatRupiah(investAmount)}</p>
@@ -474,11 +471,10 @@ export default function TransactionsPage() {
                     placeholder="Contoh: Beli 10 lot BBCA"
                     value={investNote}
                     onChange={(e) => setInvestNote(e.target.value)}
-                    className="bg-background"
                   />
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isPending || investAmount <= 0 || !investNote.trim()}>
+                <Button type="submit" className="w-full bg-[#EE4D2D] hover:bg-[#D74427] text-white" disabled={isPending || investAmount <= 0 || !investNote.trim()}>
                   {isPending ? "Memproses..." : "Catat Investasi"}
                 </Button>
               </form>

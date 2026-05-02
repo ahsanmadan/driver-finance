@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark">
       <body
-        className={`${fontSans.variable} antialiased min-h-screen pb-28`}
+        className={`${fontSans.variable} antialiased min-h-screen pb-32`}
       >
         <main className="max-w-md mx-auto p-4 min-h-screen pb-safe">
           {children}

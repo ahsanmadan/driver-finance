@@ -107,14 +107,13 @@ export default function InputShiftPage() {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="bg-background"
               />
             </div>
 
             <div className="space-y-2">
               <Label>Platform</Label>
               <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="bg-background">
+                <SelectTrigger>
                   <SelectValue placeholder="Pilih platform" />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,7 +125,7 @@ export default function InputShiftPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="grossIncome" className="text-emerald-500 font-medium">Pendapatan Aplikasi</Label>
+              <Label htmlFor="grossIncome" className="text-zinc-300 font-medium">Pendapatan Aplikasi</Label>
               <Input
                 id="grossIncome"
                 type="number"
@@ -134,7 +133,6 @@ export default function InputShiftPage() {
                 placeholder="Contoh: 150000"
                 value={grossIncomeStr}
                 onChange={(e) => setGrossIncomeStr(e.target.value)}
-                className="bg-background border-emerald-500/30 focus-visible:ring-emerald-500"
               />
               {grossIncomeStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(grossIncome)}</p>
@@ -144,7 +142,7 @@ export default function InputShiftPage() {
             <Separator className="opacity-50" />
 
             <div className="space-y-2">
-              <Label htmlFor="fuelExpense" className="text-orange-500">Pengeluaran Bensin</Label>
+              <Label htmlFor="fuelExpense" className="text-zinc-300">Pengeluaran Bensin</Label>
               <Input
                 id="fuelExpense"
                 type="number"
@@ -152,7 +150,6 @@ export default function InputShiftPage() {
                 placeholder="Contoh: 20000"
                 value={fuelExpenseStr}
                 onChange={(e) => setFuelExpenseStr(e.target.value)}
-                className="bg-background border-orange-500/30 focus-visible:ring-orange-500"
               />
               {fuelExpenseStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(fuelExpense)}</p>
@@ -160,7 +157,7 @@ export default function InputShiftPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="foodExpense" className="text-orange-500">Pengeluaran Makan</Label>
+              <Label htmlFor="foodExpense" className="text-zinc-300">Pengeluaran Makan</Label>
               <Input
                 id="foodExpense"
                 type="number"
@@ -168,7 +165,6 @@ export default function InputShiftPage() {
                 placeholder="Contoh: 15000"
                 value={foodExpenseStr}
                 onChange={(e) => setFoodExpenseStr(e.target.value)}
-                className="bg-background border-orange-500/30 focus-visible:ring-orange-500"
               />
               {foodExpenseStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(foodExpense)}</p>
@@ -176,7 +172,7 @@ export default function InputShiftPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="parkingExpense" className="text-orange-500">Pengeluaran Parkir</Label>
+              <Label htmlFor="parkingExpense" className="text-zinc-300">Pengeluaran Parkir</Label>
               <Input
                 id="parkingExpense"
                 type="number"
@@ -184,7 +180,6 @@ export default function InputShiftPage() {
                 placeholder="Contoh: 2000"
                 value={parkingExpenseStr}
                 onChange={(e) => setParkingExpenseStr(e.target.value)}
-                className="bg-background border-orange-500/30 focus-visible:ring-orange-500"
               />
               {parkingExpenseStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(parkingExpense)}</p>
@@ -192,7 +187,7 @@ export default function InputShiftPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maintenanceExpense" className="text-orange-500">Servis / Tambal Ban</Label>
+              <Label htmlFor="maintenanceExpense" className="text-zinc-300">Servis / Tambal Ban</Label>
               <Input
                 id="maintenanceExpense"
                 type="number"
@@ -200,7 +195,6 @@ export default function InputShiftPage() {
                 placeholder="Contoh: 15000"
                 value={maintenanceExpenseStr}
                 onChange={(e) => setMaintenanceExpenseStr(e.target.value)}
-                className="bg-background border-orange-500/30 focus-visible:ring-orange-500"
               />
               {maintenanceExpenseStr && (
                 <p className="text-xs text-muted-foreground ml-1">{formatRupiah(maintenanceExpense)}</p>
@@ -210,13 +204,13 @@ export default function InputShiftPage() {
             <Separator className="opacity-50" />
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Catatan Tambahan (Opsional)</Label>
+              <Label htmlFor="notes" className="text-zinc-300">Catatan Tambahan (Opsional)</Label>
               <Textarea
                 id="notes"
                 placeholder="Contoh: Makan Mie Gacoan, Ganti Oli..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="bg-background resize-none h-20"
+                className="resize-none h-20"
               />
             </div>
           </CardContent>
