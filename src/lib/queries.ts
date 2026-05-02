@@ -287,6 +287,26 @@ export async function deleteShift(id: string): Promise<void> {
 
 export async function addPortfolioAsset(walletId: string, ticker: string, totalLot: number, averagePrice: number): Promise<void> {
   const supabase = await createClient();
+
+  // Calculate costs
+  const isIDX = ticker.toUpperCase().endsWith(".JK");
+  const multiplier = isIDX ? 100 : 1;
+  const grossCost = totalLot * multiplier * averagePrice;
+  const buyFee = grossCost * 0.0015;
+  const totalCost = grossCost + buyFee;
+
+  // Check wallet balance
+  const { data: wallet, error: wError } = await supabase.from("wallets").select("*").eq("id", walletId).single();
+  if (wError || !wallet) throw new Error("Dompet investasi tidak ditemukan.");
+  if (wallet.balance < totalCost) throw new Error(`Saldo tidak mencukupi. Butuh ${totalCost} tapi saldo hanya ${wallet.balance}`);
+
+  // Deduct from wallet
+  const { error: e1 } = await supabase
+    .from("wallets")
+    .update({ balance: wallet.balance - totalCost })
+    .eq("id", wallet.id);
+  if (e1) throw new Error("Gagal memotong saldo dompet investasi.");
+
   const { error } = await supabase
     .from("portfolio_assets")
     .insert([
@@ -298,6 +318,11 @@ export async function addPortfolioAsset(walletId: string, ticker: string, totalL
       },
     ]);
   if (error) throw new Error(error.message);
+
+  // Record transaction
+  await supabase.from("transactions").insert([
+    { wallet_id: walletId, type: "expense", amount: totalCost, description: `Beli Aset: ${ticker.toUpperCase()}` },
+  ]);
 }
 
 export async function updateCustomLivePrice(assetId: string, customPrice: number | null): Promise<void> {
@@ -361,4 +386,93 @@ export async function getLivePortfolio(): Promise<LiveAssetInfo[]> {
   }
 
   return livePortfolio;
+}
+
+export async function sellPortfolioAsset(assetId: string, sellLot: number, sellPrice: number): Promise<void> {
+  const supabase = await createClient();
+
+  // Get asset
+  const { data: asset, error: aError } = await supabase.from("portfolio_assets").select("*").eq("id", assetId).single();
+  if (aError || !asset) throw new Error("Aset tidak ditemukan.");
+  if (sellLot > asset.total_lot) throw new Error("Lot yang dijual melebihi kepemilikan.");
+
+  // Get wallet
+  const { data: wallet, error: wError } = await supabase.from("wallets").select("*").eq("id", asset.wallet_id).single();
+  if (wError || !wallet) throw new Error("Dompet investasi tidak ditemukan.");
+
+  // Calculate proceeds
+  const isIDX = asset.ticker.toUpperCase().endsWith(".JK");
+  const multiplier = isIDX ? 100 : 1;
+  const grossProceeds = sellLot * multiplier * sellPrice;
+  const sellFee = grossProceeds * 0.002;
+  const netProceeds = grossProceeds - sellFee;
+
+  // Update wallet
+  const { error: e1 } = await supabase
+    .from("wallets")
+    .update({ balance: wallet.balance + netProceeds })
+    .eq("id", wallet.id);
+  if (e1) throw new Error("Gagal menambah saldo dompet investasi.");
+
+  // Update or delete asset
+  if (sellLot === asset.total_lot) {
+    const { error: e2 } = await supabase.from("portfolio_assets").delete().eq("id", assetId);
+    if (e2) throw new Error("Gagal menghapus aset.");
+  } else {
+    const { error: e2 } = await supabase
+      .from("portfolio_assets")
+      .update({ total_lot: asset.total_lot - sellLot })
+      .eq("id", assetId);
+    if (e2) throw new Error("Gagal mengupdate lot aset.");
+  }
+
+  // Record transaction
+  await supabase.from("transactions").insert([
+    { wallet_id: wallet.id, type: "income", amount: netProceeds, description: `Jual Aset: ${asset.ticker.toUpperCase()}` },
+  ]);
+}
+
+export async function withdrawPortfolioFunds(fromWalletId: string, toWalletId: string, amount: number, adminFee: number = 0): Promise<void> {
+  const supabase = await createClient();
+
+  // Get wallets
+  const { data: wallets, error: wError } = await supabase
+    .from("wallets")
+    .select("*")
+    .in("id", [fromWalletId, toWalletId]);
+
+  if (wError || !wallets || wallets.length !== 2) throw new Error("Gagal mengambil data dompet.");
+
+  const fromWallet = wallets.find((w) => w.id === fromWalletId);
+  const toWallet = wallets.find((w) => w.id === toWalletId);
+
+  if (!fromWallet || !toWallet) throw new Error("Dompet tidak ditemukan.");
+  const totalDeduction = amount + adminFee;
+  if (fromWallet.balance < totalDeduction) throw new Error(`Saldo tidak mencukupi. Butuh ${totalDeduction} tapi saldo hanya ${fromWallet.balance}`);
+
+  // Update balances
+  const { error: e1 } = await supabase
+    .from("wallets")
+    .update({ balance: fromWallet.balance - totalDeduction })
+    .eq("id", fromWallet.id);
+  if (e1) throw new Error("Gagal memotong saldo sumber.");
+
+  const { error: e2 } = await supabase
+    .from("wallets")
+    .update({ balance: toWallet.balance + amount })
+    .eq("id", toWallet.id);
+  if (e2) throw new Error("Gagal menambah saldo tujuan.");
+
+  // Record transactions
+  const transactions = [
+    { wallet_id: fromWallet.id, type: "transfer", amount: -amount, description: `Tarik Dana ke ${toWallet.name}` },
+    { wallet_id: toWallet.id, type: "transfer", amount: amount, description: `Tarik Dana dari ${fromWallet.name}` },
+  ];
+  
+  if (adminFee > 0) {
+    transactions.push({ wallet_id: fromWallet.id, type: "expense", amount: adminFee, description: "Biaya Admin Tarik Dana" });
+  }
+
+  const { error: tError } = await supabase.from("transactions").insert(transactions as any);
+  if (tError) console.error("Warning: Gagal mencatat log transaksi tarik dana", tError);
 }
