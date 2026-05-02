@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
@@ -48,6 +50,8 @@ export default function RootLayout({
         </div>
         <BottomNav />
         <Toaster theme="dark" position="top-center" />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
