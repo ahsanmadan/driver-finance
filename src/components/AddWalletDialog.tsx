@@ -53,7 +53,7 @@ export function AddWalletDialog() {
         
         // Refresh the page to fetch new wallets
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal menambahkan dompet.");
       }
     });

@@ -70,7 +70,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
         toast.success("Dompet berhasil diperbarui.");
         setIsEditDialogOpen(false);
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal memperbarui dompet.");
       }
     });
@@ -83,7 +83,7 @@ export function WalletCard({ wallet }: WalletCardProps) {
         toast.success("Dompet berhasil dihapus.");
         setIsDeleteDialogOpen(false);
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal menghapus dompet.");
       }
     });

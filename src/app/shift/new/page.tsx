@@ -82,7 +82,7 @@ export default function InputShiftPage() {
         toast.success("Shift berhasil disimpan!");
         router.push("/");
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to save shift", error);
         toast.error(error.message || "Gagal menyimpan shift.");
       }

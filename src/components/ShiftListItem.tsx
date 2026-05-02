@@ -92,7 +92,7 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
         toast.success("Data shift berhasil diperbarui.");
         setIsEditDialogOpen(false);
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal memperbarui shift.");
       }
     });
@@ -105,7 +105,7 @@ export function ShiftListItem({ shift }: ShiftListItemProps) {
         toast.success("Data shift berhasil dihapus.");
         setIsDeleteDialogOpen(false);
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal menghapus shift.");
       }
     });

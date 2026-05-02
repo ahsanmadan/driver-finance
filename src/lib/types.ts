@@ -36,6 +36,23 @@ export interface SavingGoal {
   created_at?: string;
 }
 
+export interface PortfolioAsset {
+  id: string;
+  wallet_id: string;
+  ticker: string;
+  total_lot: number;
+  average_price: number;
+  created_at?: string;
+  custom_live_price?: number | null;
+}
+
+export interface LiveAssetInfo extends PortfolioAsset {
+  livePrice: number;
+  totalValue: number;
+  pnlAmount: number;
+  pnlPercentage: number;
+}
+
 // Wallet icon map
 export const WALLET_ICONS: Record<string, string> = {
   "Uang Cash": "💵",

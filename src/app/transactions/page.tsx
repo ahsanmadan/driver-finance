@@ -3,9 +3,9 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { getWallets, createCODTransaction, createTransfer, getSavingGoals, addFundToGoal } from "@/lib/queries";
+import { getWallets, createCODTransaction, createTransfer, getSavingGoals, addFundToGoal, getLivePortfolio, addPortfolioAsset, updateCustomLivePrice } from "@/lib/queries";
 import { formatRupiah, parseIntSafe } from "@/lib/format";
-import { Wallet, SavingGoal } from "@/lib/types";
+import { Wallet, SavingGoal, LiveAssetInfo } from "@/lib/types";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +15,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Edit2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -45,10 +54,28 @@ export default function TransactionsPage() {
   const [investNote, setInvestNote] = useState("");
   const investAmount = parseIntSafe(investAmountStr);
 
-  useEffect(() => {
-    // Load wallets and goals on mount
+  // Portfolio State
+  const [livePortfolio, setLivePortfolio] = useState<LiveAssetInfo[]>([]);
+  const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
+  const [newAssetTicker, setNewAssetTicker] = useState("");
+  const [newAssetLotStr, setNewAssetLotStr] = useState("");
+  const [newAssetPriceStr, setNewAssetPriceStr] = useState("");
+  
+  const [isEditPriceOpen, setIsEditPriceOpen] = useState(false);
+  const [editAssetId, setEditAssetId] = useState("");
+  const [editPriceStr, setEditPriceStr] = useState("");
+  
+  const newAssetLot = parseFloat(newAssetLotStr) || 0;
+  const newAssetPrice = parseFloat(newAssetPriceStr) || 0;
+
+  const loadData = () => {
     getWallets().then(setWallets);
     getSavingGoals().then(setSavingGoals);
+    getLivePortfolio().then(setLivePortfolio);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const handleCODSubmit = (e: React.FormEvent) => {
@@ -69,7 +96,7 @@ export default function TransactionsPage() {
         toast.success("Setor COD berhasil dicatat!");
         setCodAmountStr("");
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal mencatat COD.");
       }
     });
@@ -107,7 +134,7 @@ export default function TransactionsPage() {
         setFromWalletId("");
         setToWalletId("");
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal melakukan transfer.");
       }
     });
@@ -139,7 +166,7 @@ export default function TransactionsPage() {
         getSavingGoals().then(setSavingGoals);
         getWallets().then(setWallets);
         router.refresh();
-      } catch (error) {
+      } catch (error: any) {
         toast.error(error.message || "Gagal mengalokasikan dana.");
       }
     });
@@ -176,13 +203,66 @@ export default function TransactionsPage() {
         setInvestAmountStr("");
         setInvestSourceId("");
         setInvestNote("");
-        getWallets().then(setWallets);
+        loadData();
         router.refresh();
-      } catch (error) {
-        toast.error(error.message || "Gagal menyimpan investasi.");
+      } catch (error: unknown) {
+        toast.error((error as Error).message || "Gagal menyimpan investasi.");
       }
     });
   };
+
+  const handleAddAsset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAssetTicker.trim()) return toast.error("Ticker wajib diisi.");
+    if (newAssetLot <= 0) return toast.error("Lot tidak valid.");
+    if (newAssetPrice <= 0) return toast.error("Harga tidak valid.");
+
+    const investWallet = wallets.find((w) => w.name === "Portofolio Investasi");
+    if (!investWallet) return toast.error("Dompet 'Portofolio Investasi' tidak ditemukan.");
+
+    startTransition(async () => {
+      try {
+        await addPortfolioAsset(investWallet.id, newAssetTicker.trim(), newAssetLot, newAssetPrice);
+        toast.success("Aset berhasil ditambahkan!");
+        setIsAddAssetOpen(false);
+        setNewAssetTicker("");
+        setNewAssetLotStr("");
+        setNewAssetPriceStr("");
+        loadData();
+        router.refresh();
+      } catch (error: unknown) {
+        toast.error((error as Error).message || "Gagal menambah aset.");
+      }
+    });
+  };
+
+  const handleUpdatePrice = (e: React.FormEvent) => {
+    e.preventDefault();
+    startTransition(async () => {
+      try {
+        const customPrice = editPriceStr.trim() === "" ? null : parseFloat(editPriceStr);
+        await updateCustomLivePrice(editAssetId, customPrice);
+        toast.success(customPrice === null ? "Harga dikembalikan ke Auto API." : "Harga live manual berhasil diatur.");
+        setIsEditPriceOpen(false);
+        setEditAssetId("");
+        setEditPriceStr("");
+        loadData();
+        router.refresh();
+      } catch (error: unknown) {
+        toast.error((error as Error).message || "Gagal mengupdate harga.");
+      }
+    });
+  };
+
+  const openEditPrice = (asset: LiveAssetInfo) => {
+    setEditAssetId(asset.id);
+    setEditPriceStr(asset.custom_live_price ? asset.custom_live_price.toString() : "");
+    setIsEditPriceOpen(true);
+  };
+
+  const grandTotalValue = livePortfolio.reduce((sum, asset) => sum + asset.totalValue, 0);
+  const grandTotalPnL = livePortfolio.reduce((sum, asset) => sum + asset.pnlAmount, 0);
+  const isPnLPositive = grandTotalPnL >= 0;
 
   return (
     <div className="flex flex-col space-y-6 pt-4 pb-8">
@@ -409,12 +489,129 @@ export default function TransactionsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="investasi">
-          <Card className="bg-card/50 border-blue-500/20">
-            <CardHeader>
-              <CardTitle className="text-lg">Portofolio Investasi</CardTitle>
-              <CardDescription>
-                Catat pembelian saham, reksa dana, atau kripto Anda.
+        <TabsContent value="investasi" className="space-y-6">
+          {/* Live Portfolio Display */}
+          <Card className="bg-card/50 border-blue-500/20 overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            <CardHeader className="pb-4">
+              <CardDescription>Live Portfolio Value</CardDescription>
+              <CardTitle className="text-3xl tracking-tighter">{formatRupiah(grandTotalValue)}</CardTitle>
+              {livePortfolio.length > 0 && (
+                <div className={`text-sm font-semibold flex items-center space-x-1 ${isPnLPositive ? "text-emerald-500" : "text-rose-500"}`}>
+                  {isPnLPositive ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                  <span>{formatRupiah(Math.abs(grandTotalPnL))} PnL</span>
+                </div>
+              )}
+            </CardHeader>
+          </Card>
+
+          {/* Asset Cards */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm text-slate-300">Aset Anda</h3>
+              <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 border-blue-500/30 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10">
+                    <Plus className="h-4 w-4 mr-1" /> Tambah Aset
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Tambah Aset Baru</DialogTitle>
+                    <DialogDescription>Masukkan detail pembelian aset untuk dilacak.</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleAddAsset} className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ticker">Ticker (Kode Emiten / Kripto)</Label>
+                      <Input id="ticker" placeholder="BUMI.JK atau BTC-USD" value={newAssetTicker} onChange={(e) => setNewAssetTicker(e.target.value)} className="uppercase" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lot">Total Lot / Unit</Label>
+                      <Input id="lot" type="number" step="any" placeholder="Contoh: 10 atau 0.5" value={newAssetLotStr} onChange={(e) => setNewAssetLotStr(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Harga Beli Rata-Rata (Avg)</Label>
+                      <Input id="price" type="number" step="any" placeholder="Contoh: 150 atau 60000" value={newAssetPriceStr} onChange={(e) => setNewAssetPriceStr(e.target.value)} />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" className="w-full bg-[#EE4D2D] hover:bg-[#D74427] text-white" disabled={isPending}>
+                        {isPending ? "Menyimpan..." : "Simpan Aset"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isEditPriceOpen} onOpenChange={setIsEditPriceOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Override Harga Live</DialogTitle>
+                    <DialogDescription>Masukkan harga manual jika API bermasalah. Kosongkan untuk kembali menggunakan Auto API (Yahoo Finance).</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdatePrice} className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="manualPrice">Harga Live Manual (Rp)</Label>
+                      <Input id="manualPrice" type="number" step="any" placeholder="Contoh: 1330" value={editPriceStr} onChange={(e) => setEditPriceStr(e.target.value)} />
+                    </div>
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                      <Button type="button" variant="outline" onClick={() => { setEditPriceStr(""); handleUpdatePrice({ preventDefault: () => {} } as React.FormEvent); }} disabled={isPending}>
+                        Reset ke Auto API
+                      </Button>
+                      <Button type="submit" className="bg-[#EE4D2D] hover:bg-[#D74427] text-white" disabled={isPending}>
+                        {isPending ? "Menyimpan..." : "Simpan Harga"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {livePortfolio.length === 0 ? (
+              <div className="text-center py-6 border border-dashed border-slate-700 rounded-lg text-slate-500 text-sm">
+                Belum ada aset. Tambahkan sekarang!
+              </div>
+            ) : (
+              livePortfolio.map((asset) => {
+                const pnlIsPositive = asset.pnlAmount >= 0;
+                return (
+                  <Card key={asset.id} className="bg-card/30 border-slate-800">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-lg leading-tight flex items-center">
+                          {asset.ticker}
+                          {asset.custom_live_price !== null && asset.custom_live_price !== undefined && (
+                            <span className="ml-2 text-[10px] font-normal bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/20">MANUAL</span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{asset.total_lot} units • Avg {formatRupiah(asset.average_price)}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <p className="font-semibold">{formatRupiah(asset.livePrice)}</p>
+                          <button onClick={() => openEditPrice(asset)} className="text-muted-foreground hover:text-white transition-colors" title="Override Harga">
+                            <Edit2 size={12} />
+                          </button>
+                        </div>
+                        <div className={`text-xs font-bold flex items-center justify-end space-x-1 ${pnlIsPositive ? "text-emerald-500" : "text-rose-500"}`}>
+                          {pnlIsPositive ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+                          <span>{formatRupiah(Math.abs(asset.pnlAmount))} ({Math.abs(asset.pnlPercentage).toFixed(2)}%)</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          <Separator className="opacity-30" />
+
+          {/* Existing Form */}
+          <Card className="bg-card/20 border-slate-800 shadow-none">
+            <CardHeader className="py-4">
+              <CardTitle className="text-base text-slate-300">Setor Dana Cash</CardTitle>
+              <CardDescription className="text-xs">
+                Catat transfer dari dompet tunai/bank ke rekening RDN/Kripto Anda.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -468,14 +665,14 @@ export default function TransactionsPage() {
                   <Input
                     id="investNote"
                     type="text"
-                    placeholder="Contoh: Beli 10 lot BBCA"
+                    placeholder="Contoh: Topup RDN Ajaib"
                     value={investNote}
                     onChange={(e) => setInvestNote(e.target.value)}
                   />
                 </div>
 
                 <Button type="submit" className="w-full bg-[#EE4D2D] hover:bg-[#D74427] text-white" disabled={isPending || investAmount <= 0 || !investNote.trim()}>
-                  {isPending ? "Memproses..." : "Catat Investasi"}
+                  {isPending ? "Memproses..." : "Catat Setoran"}
                 </Button>
               </form>
             </CardContent>

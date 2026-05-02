@@ -1,7 +1,8 @@
 "use server";
 
-import { Wallet, Shift } from "./types";
+import { Wallet, Shift, SavingGoal, PortfolioAsset, LiveAssetInfo } from "./types";
 import { createClient } from "./supabase/server";
+import yahooFinance from "yahoo-finance2";
 
 // ==========================================
 // QUERIES
@@ -278,4 +279,86 @@ export async function deleteShift(id: string): Promise<void> {
     .delete()
     .eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+// ==========================================
+// PORTFOLIO ASSETS (V3.0)
+// ==========================================
+
+export async function addPortfolioAsset(walletId: string, ticker: string, totalLot: number, averagePrice: number): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("portfolio_assets")
+    .insert([
+      {
+        wallet_id: walletId,
+        ticker: ticker.toUpperCase(),
+        total_lot: totalLot,
+        average_price: averagePrice,
+      },
+    ]);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateCustomLivePrice(assetId: string, customPrice: number | null): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("portfolio_assets")
+    .update({ custom_live_price: customPrice })
+    .eq("id", assetId);
+  if (error) throw new Error(error.message);
+}
+
+export async function getLivePortfolio(): Promise<LiveAssetInfo[]> {
+  const supabase = await createClient();
+  const { data: assets, error } = await supabase
+    .from("portfolio_assets")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (error || !assets) {
+    console.error("Error fetching portfolio assets:", error);
+    return [];
+  }
+
+  const livePortfolio: LiveAssetInfo[] = [];
+
+  for (const asset of assets) {
+    let livePrice = asset.average_price;
+
+    if (asset.custom_live_price !== null && asset.custom_live_price !== undefined) {
+      // Use Manual Override
+      livePrice = asset.custom_live_price;
+    } else {
+      // Fetch from API
+      try {
+        const quote: any = await yahooFinance.quote(asset.ticker);
+        livePrice = quote.regularMarketPrice || asset.average_price;
+      } catch (err) {
+        console.error(`Error fetching live data for ${asset.ticker}:`, err);
+        // Fallback to average price (already set above)
+      }
+    }
+
+    // Option B Logic: If .JK, multiply lot by 100
+    const isIDX = asset.ticker.endsWith(".JK");
+    const multiplier = isIDX ? 100 : 1;
+    const totalUnits = asset.total_lot * multiplier;
+
+    const totalValue = livePrice * totalUnits;
+    const totalInvested = asset.average_price * totalUnits;
+    
+    const pnlAmount = totalValue - totalInvested;
+    const pnlPercentage = totalInvested > 0 ? (pnlAmount / totalInvested) * 100 : 0;
+
+    livePortfolio.push({
+      ...asset,
+      livePrice,
+      totalValue,
+      pnlAmount,
+      pnlPercentage,
+    });
+  }
+
+  return livePortfolio;
 }
